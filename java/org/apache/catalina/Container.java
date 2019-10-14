@@ -74,7 +74,7 @@ import org.apache.juli.logging.Log;
  * </ul>
  *
  * @author Craig R. McClanahan
- * @author Remy Maucherat
+ * @author Remy Maucherata
  */
 public interface Container extends Lifecycle {
 
