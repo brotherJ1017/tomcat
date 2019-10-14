@@ -16,8 +16,25 @@
  */
 package org.apache.jasper.servlet;
 
+import org.apache.jasper.compiler.JarScannerFactory;
+import org.apache.jasper.compiler.Localizer;
+import org.apache.juli.logging.Log;
+import org.apache.juli.logging.LogFactory;
+import org.apache.tomcat.Jar;
+import org.apache.tomcat.JarScanType;
+import org.apache.tomcat.JarScanner;
+import org.apache.tomcat.JarScannerCallback;
+import org.apache.tomcat.util.descriptor.tld.TaglibXml;
+import org.apache.tomcat.util.descriptor.tld.TldParser;
+import org.apache.tomcat.util.descriptor.tld.TldResourcePath;
+import org.xml.sax.SAXException;
+
+import javax.servlet.ServletContext;
+import javax.servlet.descriptor.JspConfigDescriptor;
+import javax.servlet.descriptor.TaglibDescriptor;
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -31,23 +48,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-
-import javax.servlet.ServletContext;
-import javax.servlet.descriptor.JspConfigDescriptor;
-import javax.servlet.descriptor.TaglibDescriptor;
-
-import org.apache.jasper.compiler.JarScannerFactory;
-import org.apache.jasper.compiler.Localizer;
-import org.apache.juli.logging.Log;
-import org.apache.juli.logging.LogFactory;
-import org.apache.tomcat.Jar;
-import org.apache.tomcat.JarScanType;
-import org.apache.tomcat.JarScanner;
-import org.apache.tomcat.JarScannerCallback;
-import org.apache.tomcat.util.descriptor.tld.TaglibXml;
-import org.apache.tomcat.util.descriptor.tld.TldParser;
-import org.apache.tomcat.util.descriptor.tld.TldResourcePath;
-import org.xml.sax.SAXException;
 
 /**
  * Scans for and loads Tag Library Descriptors contained in a web application.
@@ -256,12 +256,13 @@ public class TldScanner {
     /**
      * Scan for TLDs in JARs in /WEB-INF/lib.
      */
-    public void scanJars() {
+    public void scanJars() throws UnsupportedEncodingException {
         JarScanner scanner = JarScannerFactory.getJarScanner(context);
         TldScannerCallback callback = new TldScannerCallback();
         scanner.scan(JarScanType.TLD, context, callback);
         if (callback.scanFoundNoTLDs()) {
             log.info(Localizer.getMessage("jsp.tldCache.noTldSummary"));
+            log.info( new String(Localizer.getMessage("jsp.tldCache.noTldSummary").getBytes("iso-8859-1"),"utf-8"));
         }
     }
 

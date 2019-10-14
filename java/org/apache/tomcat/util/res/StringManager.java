@@ -217,7 +217,7 @@ public class StringManager {
      *         Locale
      */
     public static final StringManager getManager(String packageName) {
-        return getManager(packageName, Locale.getDefault());
+        return getManager(packageName, Locale.ENGLISH);
     }
 
 

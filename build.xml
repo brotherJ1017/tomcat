@@ -625,7 +625,6 @@
            source="${compile.source}"
            target="${compile.target}"
            release="${compile.release}"
-           excludes="**/.svn/**"
            encoding="ISO-8859-1"
            includeAntRuntime="true" >
       <!-- Uncomment this to show unchecked warnings:
@@ -638,7 +637,7 @@
              classname="org.apache.tomcat.buildutil.CheckEol"
              classpath="${tomcat.classes}" />
 
-    <checkeol>
+    <checkeol mode="LF">
       <fileset dir="." >
         <patternset refid="text.files" />
         <include name="**/*.bat"/>
@@ -681,7 +680,6 @@
            source="${compile.source}"
            target="${compile.target}"
            release="${compile.release}"
-           excludes="**/.svn/**"
            encoding="ISO-8859-1"
            includeAntRuntime="true" >
       <!-- Uncomment this to show unchecked warnings:
@@ -1203,7 +1201,6 @@
              target="${compile.target}"
              release="${compile.release}"
              classpath="${tomcat.classes}"
-             excludes="**/CVS/**,**/.svn/**"
              encoding="ISO-8859-1"
              includeantruntime="false">
     </javac>
@@ -1216,7 +1213,6 @@
              target="${compile.target}"
              release="${compile.release}"
              classpath="${tomcat.classes}"
-             excludes="**/CVS/**,**/.svn/**"
              encoding="ISO-8859-1"
              includeantruntime="false">
     </javac>
