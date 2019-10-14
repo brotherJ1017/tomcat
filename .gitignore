@@ -46,4 +46,4 @@ webapps/docs/jdbc-pool.xml
 home/conf/
 home/lib/
 home/webapps/
-target/*
+target/
