@@ -339,7 +339,7 @@ public class CoyoteAdapter implements Adapter {
                 //check valves if we support async
                 request.setAsyncSupported(
                         connector.getService().getContainer().getPipeline().isAsyncSupported());
-                // Calling the container
+                // Calling the container 调用匹配成功的servlet
                 connector.getService().getContainer().getPipeline().getFirst().invoke(
                         request, response);
             }
@@ -627,7 +627,7 @@ public class CoyoteAdapter implements Adapter {
 
             // Parse the path parameters. This will:
             //   - strip out the path parameters
-            //   - convert the decodedURI to bytes
+            //   - convert the decodedURI to bytes 处理pathParam为 /path;name=value;name2=value2/
             parsePathParameters(req, request);
 
             // URI decoding
@@ -697,7 +697,7 @@ public class CoyoteAdapter implements Adapter {
 
             // If there is no context at this point, either this is a 404
             // because no ROOT context has been deployed or the URI was invalid
-            // so no context could be mapped.
+            // so no context could be mapped. 如果没有匹配到返回404
             if (request.getContext() == null) {
                 // Don't overwrite an existing error
                 if (!response.isError()) {
@@ -711,7 +711,7 @@ public class CoyoteAdapter implements Adapter {
 
             // Now we have the context, we can parse the session ID from the URL
             // (if any). Need to do this before we redirect in case we need to
-            // include the session id in the redirect
+            // include the session id in the redirect 从url里解析sessionId
             String sessionID;
             if (request.getServletContext().getEffectiveSessionTrackingModes()
                     .contains(SessionTrackingMode.URL)) {
@@ -725,7 +725,7 @@ public class CoyoteAdapter implements Adapter {
                     request.setRequestedSessionURL(true);
                 }
             }
-
+            // 解析cookie，从cookie里获取sessionId
             // Look for session ID in cookies and SSL session
             parseSessionCookiesId(request);
             parseSessionSslId(request);
@@ -1285,11 +1285,7 @@ public class CoyoteAdapter implements Adapter {
         }
 
         // Check for "/../"
-        if (uriCC.indexOf("/../", 0, 4, 0) >= 0) {
-            return false;
-        }
-
-        return true;
+        return uriCC.indexOf("/../", 0, 4, 0) < 0;
 
     }
 

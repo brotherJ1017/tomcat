@@ -22,6 +22,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -66,12 +67,12 @@ public abstract class AbstractEndpoint<S,U> {
 
     protected static final StringManager sm = StringManager.getManager(AbstractEndpoint.class);
 
-    public static interface Handler<S> {
+    public interface Handler<S> {
 
         /**
          * Different types of socket states to react upon.
          */
-        public enum SocketState {
+        enum SocketState {
             // TODO Add a new state to the AsyncStateMachine and remove
             //      ASYNC_END (if possible)
             OPEN, CLOSED, LONG, ASYNC_END, SENDFILE, UPGRADING, UPGRADED, SUSPENDED
@@ -86,8 +87,8 @@ public abstract class AbstractEndpoint<S,U> {
          *
          * @return The state of the socket after processing
          */
-        public SocketState process(SocketWrapperBase<S> socket,
-                SocketEvent status);
+        SocketState process(SocketWrapperBase<S> socket,
+                            SocketEvent status);
 
 
         /**
@@ -95,7 +96,7 @@ public abstract class AbstractEndpoint<S,U> {
          *
          * @return the GlobalRequestProcessor
          */
-        public Object getGlobal();
+        Object getGlobal();
 
 
         /**
@@ -104,14 +105,14 @@ public abstract class AbstractEndpoint<S,U> {
          * @return The sockets for which the handler is tracking a currently
          *         open connection
          */
-        public Set<S> getOpenSockets();
+        Set<S> getOpenSockets();
 
         /**
          * Release any resources associated with the given SocketWrapper.
          *
          * @param socketWrapper The socketWrapper to release resources for
          */
-        public void release(SocketWrapperBase<S> socketWrapper);
+        void release(SocketWrapperBase<S> socketWrapper);
 
 
         /**
@@ -120,13 +121,13 @@ public abstract class AbstractEndpoint<S,U> {
          * afterwards but it is possible that the endpoint will be resumed so
          * the handler should not assume that a stop will follow.
          */
-        public void pause();
+        void pause();
 
 
         /**
          * Recycle resources associated with the handler.
          */
-        public void recycle();
+        void recycle();
     }
 
     protected enum BindState {
@@ -970,7 +971,7 @@ public abstract class AbstractEndpoint<S,U> {
                          */
                         OutputStreamWriter sw;
 
-                        sw = new OutputStreamWriter(s.getOutputStream(), "ISO-8859-1");
+                        sw = new OutputStreamWriter(s.getOutputStream(), StandardCharsets.ISO_8859_1);
                         sw.write("OPTIONS * HTTP/1.0\r\n" +
                                  "User-Agent: Tomcat wakeup connection\r\n\r\n");
                         sw.flush();
@@ -1069,12 +1070,12 @@ public abstract class AbstractEndpoint<S,U> {
             SocketProcessorBase<S> sc = null;
             if (processorCache != null) {
                 sc = processorCache.pop();
-            }
+            } // 1.创建socket数据处理器
             if (sc == null) {
                 sc = createSocketProcessor(socketWrapper, event);
             } else {
                 sc.reset(socketWrapper, event);
-            }
+            } //2.启动线程处理socket数据
             Executor executor = getExecutor();
             if (dispatch && executor != null) {
                 executor.execute(sc);
@@ -1116,7 +1117,7 @@ public abstract class AbstractEndpoint<S,U> {
 
     private void bindWithCleanup() throws Exception {
         try {
-            bind();
+            bind();//这里是重点
         } catch (Throwable t) {
             // Ensure open sockets etc. are cleaned up if something goes
             // wrong during bind
@@ -1129,7 +1130,7 @@ public abstract class AbstractEndpoint<S,U> {
 
     public final void init() throws Exception {
         if (bindOnInit) {
-            bindWithCleanup();
+            bindWithCleanup();//绑定端口，连接socket
             bindState = BindState.BOUND_ON_INIT;
         }
         if (this.domain != null) {

@@ -238,7 +238,7 @@ public class StandardEngine extends ContainerBase implements Engine {
     protected void initInternal() throws LifecycleException {
         // Ensure that a Realm is present before any attempt is made to start
         // one. This will create the default NullRealm if necessary.
-        getRealm();
+        getRealm();//这里父类ContainerBase重写了initInternal
         super.initInternal();
     }
 

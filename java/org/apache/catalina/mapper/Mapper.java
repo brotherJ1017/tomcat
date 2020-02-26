@@ -699,7 +699,7 @@ public final class Mapper {
         }
         host.toChars();
         uri.toChars();
-        internalMap(host.getCharChunk(), uri.getCharChunk(), version, mappingData);
+        internalMap(host.getCharChunk(), uri.getCharChunk(), version, mappingData); //匹配context（即war包）名称，设置到mappingData中，匹配成功后匹配context的child wrapper名称，设置到mappingData中。
     }
 
 
@@ -789,7 +789,7 @@ public final class Mapper {
         int length = -1;
         boolean found = false;
         MappedContext context = null;
-        while (pos >= 0) {
+        while (pos >= 0) {//匹配context
             context = contexts[pos];
             if (uri.startsWith(context.name)) {
                 length = context.name.length();
@@ -845,7 +845,7 @@ public final class Mapper {
         mappingData.context = contextVersion.object;
         mappingData.contextSlashCount = contextVersion.slashCount;
 
-        // Wrapper mapping
+        // Wrapper mapping 匹配wrapper
         if (!contextVersion.isPaused()) {
             internalMapWrapper(contextVersion, uri, mappingData);
         }
@@ -873,11 +873,11 @@ public final class Mapper {
         int servletPath = pathOffset + length;
         path.setOffset(servletPath);
 
-        // Rule 1 -- Exact Match
+        // Rule 1 -- Exact Match 匹配真实的wrapper，即项目里自己写的
         MappedWrapper[] exactWrappers = contextVersion.exactWrappers;
         internalMapExactWrapper(exactWrappers, path, mappingData);
 
-        // Rule 2 -- Prefix Match
+        // Rule 2 -- Prefix Match 通配匹配
         boolean checkJspWelcomeFiles = false;
         MappedWrapper[] wildcardWrappers = contextVersion.wildcardWrappers;
         if (mappingData.wrapper == null) {
@@ -916,7 +916,7 @@ public final class Mapper {
             return;
         }
 
-        // Rule 3 -- Extension Match
+        // Rule 3 -- Extension Match 扩展匹配
         MappedWrapper[] extensionWrappers = contextVersion.extensionWrappers;
         if (mappingData.wrapper == null && !checkJspWelcomeFiles) {
             internalMapExtensionWrapper(extensionWrappers, path, mappingData,
@@ -1070,7 +1070,7 @@ public final class Mapper {
         if (wrapper != null) {
             mappingData.requestPath.setString(wrapper.name);
             mappingData.wrapper = wrapper.object;
-            if (path.equals("/")) {
+            if (path.equals("/")) {//根目录
                 // Special handling for Context Root mapped servlet
                 mappingData.pathInfo.setString("/");
                 mappingData.wrapperPath.setString("");

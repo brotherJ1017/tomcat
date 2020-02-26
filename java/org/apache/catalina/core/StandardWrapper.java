@@ -755,7 +755,7 @@ public class StandardWrapper extends ContainerBase
                             if (log.isDebugEnabled()) {
                                 log.debug("Allocating non-STM instance");
                             }
-
+                            //实例化servlet并调用init方法
                             // Note: We don't know if the Servlet implements
                             // SingleThreadModel until we have loaded it.
                             instance = loadServlet();
@@ -887,7 +887,7 @@ public class StandardWrapper extends ContainerBase
 
         parametersLock.readLock().lock();
         try {
-            String results[] = new String[parameters.size()];
+            String[] results = new String[parameters.size()];
             return parameters.keySet().toArray(results);
         } finally {
             parametersLock.readLock().unlock();
@@ -940,7 +940,7 @@ public class StandardWrapper extends ContainerBase
 
         referencesLock.readLock().lock();
         try {
-            String results[] = new String[references.size()];
+            String[] results = new String[references.size()];
             return references.keySet().toArray(results);
         } finally {
             referencesLock.readLock().unlock();
@@ -968,6 +968,7 @@ public class StandardWrapper extends ContainerBase
      */
     @Override
     public synchronized void load() throws ServletException {
+        // 实例化 Servlet，并且调用 init 方法完成初始化
         instance = loadServlet();
 
         if (!instanceInitialized) {
@@ -1073,7 +1074,7 @@ public class StandardWrapper extends ContainerBase
                 }
                 singleThreadModel = true;
             }
-
+            //调用servlet的init
             initServlet(servlet);
 
             fireContainerEvent("load", this);
@@ -1531,6 +1532,7 @@ public class StandardWrapper extends ContainerBase
     @Override
     protected synchronized void startInternal() throws LifecycleException {
 
+        // 发出 j2ee.state.starting 事件通知
         // Send j2ee.state.starting notification
         if (this.getObjectName() != null) {
             Notification notification = new Notification("j2ee.state.starting",
@@ -1544,6 +1546,7 @@ public class StandardWrapper extends ContainerBase
 
         setAvailable(0L);
 
+        //running 事件通知
         // Send j2ee.state.running notification
         if (this.getObjectName() != null) {
             Notification notification =

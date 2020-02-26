@@ -137,9 +137,8 @@ public class Digester extends DefaultHandler2 {
         }
     }
 
-
-    protected IntrospectionUtils.PropertySource source[] = new IntrospectionUtils.PropertySource[] {
-            new SystemPropertySource() };
+    protected IntrospectionUtils.PropertySource[] source = new IntrospectionUtils.PropertySource[]{
+            new SystemPropertySource()};
 
 
     /**
@@ -814,7 +813,7 @@ public class Digester extends DefaultHandler2 {
      * @exception SAXException if a parsing error is to be reported
      */
     @Override
-    public void characters(char buffer[], int start, int length) throws SAXException {
+    public void characters(char[] buffer, int start, int length) throws SAXException {
 
         if (saxLog.isDebugEnabled()) {
             saxLog.debug("characters(" + new String(buffer, start, length) + ")");
@@ -1003,7 +1002,7 @@ public class Digester extends DefaultHandler2 {
      * @exception SAXException if a parsing error is to be reported
      */
     @Override
-    public void ignorableWhitespace(char buffer[], int start, int len) throws SAXException {
+    public void ignorableWhitespace(char[] buffer, int start, int len) throws SAXException {
 
         if (saxLog.isDebugEnabled()) {
             saxLog.debug("ignorableWhitespace(" + new String(buffer, start, len) + ")");
@@ -1160,7 +1159,7 @@ public class Digester extends DefaultHandler2 {
             log.debug("  New match='" + match + "'");
         }
 
-        // Fire "begin" events for all relevant rules
+        // Fire "begin" events for all relevant rules。根据名称匹配创建Digester时的rule
         List<Rule> rules = getRules().match(namespaceURI, match);
         matches.push(rules);
         if ((rules != null) && (rules.size() > 0)) {

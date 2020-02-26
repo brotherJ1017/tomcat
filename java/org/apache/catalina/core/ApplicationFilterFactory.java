@@ -81,7 +81,7 @@ public final class ApplicationFilterFactory {
 
         // Acquire the filter mappings for this Context
         StandardContext context = (StandardContext) wrapper.getParent();
-        FilterMap filterMaps[] = context.findFilterMaps();
+        FilterMap[] filterMaps = context.findFilterMaps();
 
         // If there are no filter mappings, we are done
         if ((filterMaps == null) || (filterMaps.length == 0))
@@ -98,7 +98,7 @@ public final class ApplicationFilterFactory {
         }
 
         String servletName = wrapper.getName();
-
+        //校验url是否匹配filter
         // Add the relevant path-mapped filters to this filter chain
         for (int i = 0; i < filterMaps.length; i++) {
             if (!matchDispatcher(filterMaps[i] ,dispatcher)) {
@@ -114,7 +114,7 @@ public final class ApplicationFilterFactory {
             }
             filterChain.addFilter(filterConfig);
         }
-
+        //校验servlet name是否匹配
         // Add filters that match on servlet name second
         for (int i = 0; i < filterMaps.length; i++) {
             if (!matchDispatcher(filterMaps[i] ,dispatcher)) {
@@ -197,9 +197,7 @@ public final class ApplicationFilterFactory {
                                        testPath.length() - 2)) {
                 if (requestPath.length() == (testPath.length() - 2)) {
                     return true;
-                } else if ('/' == requestPath.charAt(testPath.length() - 2)) {
-                    return true;
-                }
+                } else return '/' == requestPath.charAt(testPath.length() - 2);
             }
             return false;
         }

@@ -193,23 +193,22 @@ public class Request implements HttpServletRequest {
      */
     protected Cookie[] cookies = null;
 
-
     /**
      * The set of SimpleDateFormat formats to use in getDateHeader().
-     *
+     * <p>
      * Notice that because SimpleDateFormat is not thread-safe, we can't
      * declare formats[] as a static variable.
      *
      * @deprecated Unused. This will be removed in Tomcat 10
      */
     @Deprecated
-    protected final SimpleDateFormat formats[];
+    protected final SimpleDateFormat[] formats;
 
     @Deprecated
-    private static final SimpleDateFormat formatsTemplate[] = {
-        new SimpleDateFormat(FastHttpDateFormat.RFC1123_DATE, Locale.US),
-        new SimpleDateFormat("EEEEEE, dd-MMM-yy HH:mm:ss zzz", Locale.US),
-        new SimpleDateFormat("EEE MMMM d HH:mm:ss yyyy", Locale.US)
+    private static final SimpleDateFormat[] formatsTemplate = {
+            new SimpleDateFormat(FastHttpDateFormat.RFC1123_DATE, Locale.US),
+            new SimpleDateFormat("EEEEEE, dd-MMM-yy HH:mm:ss zzz", Locale.US),
+            new SimpleDateFormat("EEE MMMM d HH:mm:ss yyyy", Locale.US)
     };
 
 
@@ -1111,7 +1110,7 @@ public class Request implements HttpServletRequest {
      */
     @Override
     public String getParameter(String name) {
-
+        //parametersParsed 默认是false,解析万后会设置为true，防止重复读
         if (!parametersParsed) {
             parseParameters();
         }
@@ -1551,7 +1550,7 @@ public class Request implements HttpServletRequest {
         if (context == null) {
             return;
         }
-        Object listeners[] = context.getApplicationEventListeners();
+        Object[] listeners = context.getApplicationEventListeners();
         if ((listeners == null) || (listeners.length == 0)) {
             return;
         }
@@ -1595,7 +1594,7 @@ public class Request implements HttpServletRequest {
      */
     private void notifyAttributeRemoved(String name, Object value) {
         Context context = getContext();
-        Object listeners[] = context.getApplicationEventListeners();
+        Object[] listeners = context.getApplicationEventListeners();
         if ((listeners == null) || (listeners.length == 0)) {
             return;
         }
@@ -2129,7 +2128,7 @@ public class Request implements HttpServletRequest {
             return input;
         }
         StringBuilder result = new StringBuilder(input.length());
-        result.append(input.substring(0, nextSemiColon));
+        result.append(input, 0, nextSemiColon);
         while (true) {
             int nextSlash = input.indexOf('/', nextSemiColon);
             if (nextSlash == -1) {
@@ -2140,7 +2139,7 @@ public class Request implements HttpServletRequest {
                 result.append(input.substring(nextSlash));
                 break;
             } else {
-                result.append(input.substring(nextSlash, nextSemiColon));
+                result.append(input, nextSlash, nextSemiColon);
             }
         }
 
@@ -3171,10 +3170,10 @@ public class Request implements HttpServletRequest {
             }
             // Note: If !useBodyEncodingForURI, the query string encoding is
             //       that set towards the start of CoyoyeAdapter.service()
-
+            //解析url后面的参数
             parameters.handleQueryParameters();
-
-            if (usingInputStream || usingReader) {
+            //usingInputStream 为true，或者usingReader 为true则不直接返回
+            if (usingInputStream || usingReader) {//需要判断是否执行过getInputStream(),如果通过stream流的形式读了，则在getParameter是读不到body里的参数的。只能获取url后面的参数。
                 success = true;
                 return;
             }
@@ -3189,7 +3188,7 @@ public class Request implements HttpServletRequest {
             } else {
                 contentType = contentType.trim();
             }
-
+            //检查header content-type，如果不是multipart/form-data 或者application/x-www-form-urlencoded 的，则不解析body
             if ("multipart/form-data".equals(contentType)) {
                 parseParts(false);
                 success = true;
@@ -3205,12 +3204,12 @@ public class Request implements HttpServletRequest {
                 success = true;
                 return;
             }
-
+            //获取content-length，如果是chunked，则返回-1
             int len = getContentLength();
-
+            //len 大于0则是普通的body
             if (len > 0) {
                 int maxPostSize = connector.getMaxPostSize();
-                if ((maxPostSize >= 0) && (len > maxPostSize)) {
+                if ((maxPostSize >= 0) && (len > maxPostSize)) {//检查body的大小是否超过了maxPostSize 的大小，maxPostSize默认是2m
                     Context context = getContext();
                     if (context != null && context.getLogger().isDebugEnabled()) {
                         context.getLogger().debug(
@@ -3219,9 +3218,9 @@ public class Request implements HttpServletRequest {
                     checkSwallowInput();
                     parameters.setParseFailedReason(FailReason.POST_TOO_LARGE);
                     return;
-                }
+                }//解析body.tomcat 是从底层inputbuffer把body的字节流copy到一个字节数组里，通过解析这个字节数组把里面的参数解析出来放到LinkedHashMap里，tomcat 会在这时做一次urlDecode,保证我们获取到的参数已经时解过码的
                 byte[] formData = null;
-                if (len < CACHED_POST_LEN) {
+                if (len < CACHED_POST_LEN) {//如果body的大小小于CACHED_POST_LEN，默认8192即8k,tomcat是用缓存的字节数组，不是重新创建一个，新建一个意味着向os申请一块连续的内存，如果不重用，则会出现频繁的申请向os.
                     if (postData == null) {
                         postData = new byte[CACHED_POST_LEN];
                     }
@@ -3229,7 +3228,7 @@ public class Request implements HttpServletRequest {
                 } else {
                     formData = new byte[len];
                 }
-                try {
+                try {//这里是从inputbuffer里读数据。我们分析了半天都没有看到前面提到的inputFilter到底在那里发挥作用的，接下来它就要登场了，这里是普通post的非chunk，则用的是IdentityInputFilter。
                     if (readPostBody(formData, len) != len) {
                         parameters.setParseFailedReason(FailReason.REQUEST_BODY_INCOMPLETE);
                         return;
@@ -3244,7 +3243,7 @@ public class Request implements HttpServletRequest {
                     }
                     parameters.setParseFailedReason(FailReason.CLIENT_DISCONNECT);
                     return;
-                }
+                }//这里是读到具体内容后，解析出参数出来，这个都是一样的，无论是普通post请求还是chunked 请求，这个不是我们关注的点，不具体分析
                 parameters.processParameters(formData, 0, len);
             } else if ("chunked".equalsIgnoreCase(
                     coyoteRequest.getHeader("transfer-encoding"))) {
@@ -3411,7 +3410,7 @@ public class Request implements HttpServletRequest {
 
     // ----------------------------------------------------- Special attributes handling
 
-    private static interface SpecialAttributeAdapter {
+    private interface SpecialAttributeAdapter {
         Object get(Request request, String name);
 
         void set(Request request, String name, Object value);

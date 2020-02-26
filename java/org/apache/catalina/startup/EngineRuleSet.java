@@ -74,10 +74,13 @@ public class EngineRuleSet implements RuleSet {
     @Override
     public void addRuleInstances(Digester digester) {
 
+        //创建Engine实例，并通过setContainer方法设置到service
         digester.addObjectCreate(prefix + "Engine",
                                  "org.apache.catalina.core.StandardEngine",
                                  "className");
         digester.addSetProperties(prefix + "Engine");
+        //设置监听器，用来打印启动和停止日志，
+        // 创建类时默认添加，并非通过server.xml配置
         digester.addRule(prefix + "Engine",
                          new LifecycleListenerRule
                          ("org.apache.catalina.startup.EngineConfig",
@@ -104,7 +107,7 @@ public class EngineRuleSet implements RuleSet {
                             "addLifecycleListener",
                             "org.apache.catalina.LifecycleListener");
 
-
+        //安全配置
         digester.addRuleSet(new RealmRuleSet(prefix + "Engine/"));
 
         digester.addObjectCreate(prefix + "Engine/Valve",

@@ -77,11 +77,10 @@ public class StandardService extends LifecycleMBeanBase implements Service {
      */
     protected final PropertyChangeSupport support = new PropertyChangeSupport(this);
 
-
     /**
      * The set of Connectors associated with this Service.
      */
-    protected Connector connectors[] = new Connector[0];
+    protected Connector[] connectors = new Connector[0];
     private final Object connectorsLock = new Object();
 
     /**
@@ -216,7 +215,7 @@ public class StandardService extends LifecycleMBeanBase implements Service {
 
         synchronized (connectorsLock) {
             connector.setService(this);
-            Connector results[] = new Connector[connectors.length + 1];
+            Connector[] results = new Connector[connectors.length + 1];
             System.arraycopy(connectors, 0, results, 0, connectors.length);
             results[connectors.length] = connector;
             connectors = results;
@@ -237,7 +236,7 @@ public class StandardService extends LifecycleMBeanBase implements Service {
 
 
     public ObjectName[] getConnectorNames() {
-        ObjectName results[] = new ObjectName[connectors.length];
+        ObjectName[] results = new ObjectName[connectors.length];
         for (int i=0; i<results.length; i++) {
             results[i] = connectors[i].getObjectName();
         }
@@ -295,7 +294,7 @@ public class StandardService extends LifecycleMBeanBase implements Service {
             }
             connector.setService(null);
             int k = 0;
-            Connector results[] = new Connector[connectors.length - 1];
+            Connector[] results = new Connector[connectors.length - 1];
             for (int i = 0; i < connectors.length; i++) {
                 if (i != j)
                     results[k++] = connectors[i];
@@ -415,21 +414,21 @@ public class StandardService extends LifecycleMBeanBase implements Service {
             log.info(sm.getString("standardService.start.name", this.name));
         setState(LifecycleState.STARTING);
 
-        // Start our defined Container first
+        // Start our defined Container first  //engine启动
         if (engine != null) {
             synchronized (engine) {
                 engine.start();
             }
         }
-
+        // 启动Executor线程池
         synchronized (executors) {
             for (Executor executor: executors) {
                 executor.start();
             }
         }
-
+        // 启动MapperListener
         mapperListener.start();
-
+        // 启动Connector
         // Start our defined Connectors second
         synchronized (connectorsLock) {
             for (Connector connector: connectors) {
@@ -511,12 +510,12 @@ public class StandardService extends LifecycleMBeanBase implements Service {
     protected void initInternal() throws LifecycleException {
 
         super.initInternal();
-
+        // 初始化Engine
         if (engine != null) {
             engine.init();
         }
 
-        // Initialize any Executors
+        // Initialize any Executors // 存在Executor线程池，则进行初始化，默认是没有的
         for (Executor executor : findExecutors()) {
             if (executor instanceof JmxEnabled) {
                 ((JmxEnabled) executor).setDomain(getDomain());
@@ -527,7 +526,7 @@ public class StandardService extends LifecycleMBeanBase implements Service {
         // Initialize mapper listener
         mapperListener.init();
 
-        // Initialize our defined Connectors
+        // Initialize our defined Connectors // 初始化Connector，而Connector又会对ProtocolHandler进行初始化，开启应用端口的监听
         synchronized (connectorsLock) {
             for (Connector connector : connectors) {
                 connector.init();

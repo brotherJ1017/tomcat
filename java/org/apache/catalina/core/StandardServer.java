@@ -136,11 +136,10 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
      */
     private Random random = null;
 
-
     /**
      * The set of Services associated with this Server.
      */
-    private Service services[] = new Service[0];
+    private Service[] services = new Service[0];
     private final Object servicesLock = new Object();
 
 
@@ -509,7 +508,7 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
         service.setServer(this);
 
         synchronized (servicesLock) {
-            Service results[] = new Service[services.length + 1];
+            Service[] results = new Service[services.length + 1];
             System.arraycopy(services, 0, results, 0, services.length);
             results[services.length] = service;
             services = results;
@@ -721,7 +720,7 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
      * @return the JMX service names.
      */
     public ObjectName[] getServiceNames() {
-        ObjectName onames[]=new ObjectName[ services.length ];
+        ObjectName[] onames = new ObjectName[services.length];
         for( int i=0; i<services.length; i++ ) {
             onames[i]=((StandardService)services[i]).getObjectName();
         }
@@ -754,7 +753,7 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
                 // Ignore
             }
             int k = 0;
-            Service results[] = new Service[services.length - 1];
+            Service[] results = new Service[services.length - 1];
             for (int i = 0; i < services.length; i++) {
                 if (i != j)
                     results[k++] = services[i];
@@ -926,7 +925,7 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
 
         globalNamingResources.start();
 
-        // Start our defined Services
+        // Start our defined Services //启动services组件
         synchronized (servicesLock) {
             for (int i = 0; i < services.length; i++) {
                 services[i].start();
@@ -1016,14 +1015,16 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
         // Note although the cache is global, if there are multiple Servers
         // present in the JVM (may happen when embedding) then the same cache
         // will be registered under multiple names
+        // 往jmx中注册全局的String cache，尽管这个cache是全局听，但是如果在同一个jvm中存在多个Server，
+        // 那么则会注册多个不同名字的StringCache，这种情况在内嵌的tomcat中可能会出现
         onameStringCache = register(new StringCache(), "type=StringCache");
 
-        // Register the MBeanFactory
+        // Register the MBeanFactory // 注册MBeanFactory，用来管理Server
         MBeanFactory factory = new MBeanFactory();
         factory.setContainer(this);
         onameMBeanFactory = register(factory, "type=MBeanFactory");
 
-        // Register the naming resources
+        // Register the naming resources // 往jmx中注册全局的NamingResources
         globalNamingResources.init();
 
         // Populate the extension validator with JARs from common and shared
@@ -1054,7 +1055,7 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
                 cl = cl.getParent();
             }
         }
-        // Initialize our defined Services
+        // Initialize our defined Services  // 初始化内部的Service
         for (int i = 0; i < services.length; i++) {
             services[i].init();
         }

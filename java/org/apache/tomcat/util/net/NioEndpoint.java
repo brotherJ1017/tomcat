@@ -16,6 +16,17 @@
  */
 package org.apache.tomcat.util.net;
 
+import org.apache.juli.logging.Log;
+import org.apache.juli.logging.LogFactory;
+import org.apache.tomcat.util.ExceptionUtils;
+import org.apache.tomcat.util.IntrospectionUtils;
+import org.apache.tomcat.util.collections.SynchronizedQueue;
+import org.apache.tomcat.util.collections.SynchronizedStack;
+import org.apache.tomcat.util.net.AbstractEndpoint.Handler.SocketState;
+import org.apache.tomcat.util.net.jsse.JSSESupport;
+
+import javax.net.ssl.SSLEngine;
+import javax.net.ssl.SSLSession;
 import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
@@ -46,18 +57,6 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-
-import javax.net.ssl.SSLEngine;
-import javax.net.ssl.SSLSession;
-
-import org.apache.juli.logging.Log;
-import org.apache.juli.logging.LogFactory;
-import org.apache.tomcat.util.ExceptionUtils;
-import org.apache.tomcat.util.IntrospectionUtils;
-import org.apache.tomcat.util.collections.SynchronizedQueue;
-import org.apache.tomcat.util.collections.SynchronizedStack;
-import org.apache.tomcat.util.net.AbstractEndpoint.Handler.SocketState;
-import org.apache.tomcat.util.net.jsse.JSSESupport;
 
 /**
  * NIO tailored thread pool, providing the following services:
@@ -221,7 +220,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel,SocketChannel> 
     public void bind() throws Exception {
         initServerSocket();
 
-        // Initialize thread count defaults for acceptor, poller
+        // Initialize thread count defaults for acceptor, poller // 初始化acceptor、poller线程的数量
         if (acceptorThreadCount == 0) {
             // FIXME: Doesn't seem to work that well with multiple accept threads
             acceptorThreadCount = 1;
@@ -232,20 +231,20 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel,SocketChannel> 
         }
         setStopLatch(new CountDownLatch(pollerThreadCount));
 
-        // Initialize SSL if needed
+        // Initialize SSL if needed // 如果有必要的话初始化ssl
         initialiseSsl();
-
+        // 初始化selector
         selectorPool.open(getName());
     }
 
     // Separated out to make it easier for folks that extend NioEndpoint to
     // implement custom [server]sockets
     protected void initServerSocket() throws Exception {
-        if (!getUseInheritedChannel()) {
-            serverSock = ServerSocketChannel.open();
-            socketProperties.setProperties(serverSock.socket());
+        if (!getUseInheritedChannel()) {// 实例化ServerSocketChannel，并且绑定端口和地址
+            serverSock = ServerSocketChannel.open();//创建socket
+            socketProperties.setProperties(serverSock.socket());//设置超时时间等
             InetSocketAddress addr = new InetSocketAddress(getAddress(), getPortWithOffset());
-            serverSock.socket().bind(addr,getAcceptCount());
+            serverSock.socket().bind(addr,getAcceptCount());//设置最大连接数，原来是在这里设置的
         } else {
             // Retrieve the channel provided by the OS
             Channel ic = System.inheritedChannel();
@@ -593,7 +592,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel,SocketChannel> 
      * Poller class.
      */
     public class Poller implements Runnable {
-
+        //记录变量
         private Selector selector;
         private final SynchronizedQueue<PollerEvent> events =
                 new SynchronizedQueue<>();
@@ -796,7 +795,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel,SocketChannel> 
                     if (socketWrapper == null) {
                         iterator.remove();
                     } else {
-                        iterator.remove();
+                        iterator.remove();//处理读写事件
                         processKey(sk, socketWrapper);
                     }
                 }

@@ -766,7 +766,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase
     @Override
     public Container[] findChildren() {
         synchronized (children) {
-            Container results[] = new Container[children.size()];
+            Container[] results = new Container[children.size()];
             return children.values().toArray(results);
         }
     }
@@ -859,7 +859,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase
 
 
     private void reconfigureStartStopExecutor(int threads) {
-        if (threads == 1) {
+        if (threads == 1) { //线程数为1时
             // Use a fake executor
             if (!(startStopExecutor instanceof InlineExecutorService)) {
                 startStopExecutor = new InlineExecutorService();
@@ -895,15 +895,15 @@ public abstract class ContainerBase extends LifecycleMBeanBase
             ((Lifecycle) realm).start();
         }
 
-        // Start our child containers, if any
-        Container children[] = findChildren();
+        // Start our child containers, if any    // 把子容器的启动步骤放在线程中处理，默认情况下线程池只有一个线程处理任务队列
+        Container[] children = findChildren();
         List<Future<Void>> results = new ArrayList<>();
         for (int i = 0; i < children.length; i++) {
             results.add(startStopExecutor.submit(new StartChild(children[i])));
         }
 
         MultiThrowable multiThrowable = null;
-
+        // 阻塞当前线程，直到子容器start完成
         for (Future<Void> result : results) {
             try {
                 result.get();
@@ -920,7 +920,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase
             throw new LifecycleException(sm.getString("containerBase.threadedStartFailed"),
                     multiThrowable.getThrowable());
         }
-
+        // 启用Pipeline
         // Start the Valves in our pipeline (including the basic), if any
         if (pipeline instanceof Lifecycle) {
             ((Lifecycle) pipeline).start();
@@ -928,7 +928,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase
 
         setState(LifecycleState.STARTING);
 
-        // Start our thread
+        // Start our thread  // 开启ContainerBackgroundProcessor线程用于调用子容器的backgroundProcess方法，默认情况下backgroundProcessorDelay=-1，不会启用该线程
         if (backgroundProcessorDelay > 0) {
             monitorFuture = Container.getService(ContainerBase.this).getServer()
                     .getUtilityExecutor().scheduleWithFixedDelay(
@@ -963,7 +963,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase
         }
 
         // Stop our child containers, if any
-        Container children[] = findChildren();
+        Container[] children = findChildren();
         List<Future<Void>> results = new ArrayList<>();
         for (int i = 0; i < children.length; i++) {
             results.add(startStopExecutor.submit(new StopChild(children[i])));
@@ -1061,7 +1061,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase
         }
 
         AccessLogAdapter adapter = null;
-        Valve valves[] = getPipeline().getValves();
+        Valve[] valves = getPipeline().getValves();
         for (Valve valve : valves) {
             if (valve instanceof AccessLog) {
                 if (adapter == null) {

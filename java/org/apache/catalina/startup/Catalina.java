@@ -222,7 +222,7 @@ public class Catalina {
      * @param args Command line arguments to process
      * @return <code>true</code> if we should continue processing
      */
-    protected boolean arguments(String args[]) {
+    protected boolean arguments(String[] args) {
 
         boolean isConfig = false;
 
@@ -299,7 +299,8 @@ public class Catalina {
         digester.setFakeAttributes(fakeAttributes);
         digester.setUseContextClassLoader(true);
 
-        // Configure the actions we will be using
+        // Configure the actions we will be using  这里只是将所有需要被创建的class及属性根据不同的规则封装，并放入digester
+        //创建server实例，默认实现为StandardServer
         digester.addObjectCreate("Server",
                                  "org.apache.catalina.core.StandardServer",
                                  "className");
@@ -314,7 +315,7 @@ public class Catalina {
         digester.addSetNext("Server/GlobalNamingResources",
                             "setGlobalNamingResources",
                             "org.apache.catalina.deploy.NamingResourcesImpl");
-
+        //server lifecycle监听器
         digester.addRule("Server/Listener",
                 new ListenerCreateRule(null, "className"));
         digester.addSetProperties("Server/Listener");
@@ -322,6 +323,7 @@ public class Catalina {
                             "addLifecycleListener",
                             "org.apache.catalina.LifecycleListener");
 
+        //创建service实例，默认实现为StandardService
         digester.addObjectCreate("Server/Service",
                                  "org.apache.catalina.core.StandardService",
                                  "className");
@@ -329,7 +331,7 @@ public class Catalina {
         digester.addSetNext("Server/Service",
                             "addService",
                             "org.apache.catalina.Service");
-
+        //service lifecycle监听器
         digester.addObjectCreate("Server/Service/Listener",
                                  null, // MUST be specified in the element
                                  "className");
@@ -338,7 +340,7 @@ public class Catalina {
                             "addLifecycleListener",
                             "org.apache.catalina.LifecycleListener");
 
-        //Executor
+        //为Service添加Executor
         digester.addObjectCreate("Server/Service/Executor",
                          "org.apache.catalina.core.StandardThreadExecutor",
                          "className");
@@ -348,9 +350,11 @@ public class Catalina {
                             "addExecutor",
                             "org.apache.catalina.Executor");
 
-
+        //-----为Service添加Connector
         digester.addRule("Server/Service/Connector",
                          new ConnectorCreateRule());
+
+        //todo
         digester.addRule("Server/Service/Connector", new SetAllPropertiesRule(
                 new String[]{"executor", "sslImplementationName", "protocol"}));
         digester.addSetNext("Server/Service/Connector",
@@ -358,7 +362,7 @@ public class Catalina {
                             "org.apache.catalina.connector.Connector");
 
         digester.addRule("Server/Service/Connector", new AddPortOffsetRule());
-
+        //-----
         digester.addObjectCreate("Server/Service/Connector/SSLHostConfig",
                                  "org.apache.tomcat.util.net.SSLHostConfig");
         digester.addSetProperties("Server/Service/Connector/SSLHostConfig");
@@ -388,6 +392,7 @@ public class Catalina {
                             "addCmd",
                             "org.apache.tomcat.util.net.openssl.OpenSSLConfCmd");
 
+        //Connector lifecycle监听器
         digester.addObjectCreate("Server/Service/Connector/Listener",
                                  null, // MUST be specified in the element
                                  "className");
@@ -396,6 +401,7 @@ public class Catalina {
                             "addLifecycleListener",
                             "org.apache.catalina.LifecycleListener");
 
+        //UpgradeProtocol 升级协议，用来支持http/2
         digester.addObjectCreate("Server/Service/Connector/UpgradeProtocol",
                                   null, // MUST be specified in the element
                                   "className");
@@ -406,8 +412,13 @@ public class Catalina {
 
         // Add RuleSets for nested elements
         digester.addRuleSet(new NamingRuleSet("Server/GlobalNamingResources/"));
+        //Engine 解析 EngineRuleSet.addRuleInstances
         digester.addRuleSet(new EngineRuleSet("Server/Service/"));
+
+        //Host解析  HostRuleSet.addRuleInstances
         digester.addRuleSet(new HostRuleSet("Server/Service/Engine/"));
+
+        //Context解析  ContextRuleSet.addRuleInstances
         digester.addRuleSet(new ContextRuleSet("Server/Service/Engine/Host/"));
         addClusterRuleSet(digester, "Server/Service/Engine/Host/Cluster/");
         digester.addRuleSet(new NamingRuleSet("Server/Service/Engine/Host/Context/"));
@@ -551,19 +562,19 @@ public class Catalina {
         // Before digester - it may be needed
         initNaming();
 
-        // Set configuration source
+        // Set configuration source //获取server.xml的存放位置
         ConfigFileLoader.setSource(new CatalinaBaseConfigurationSource(Bootstrap.getCatalinaBaseFile(), getConfigFile()));
         File file = configFile();
 
-        // Create and execute our Digester
+        // Create and execute our Digester //将需要的class，属性及需要执行的方法封装存入Digester // 定义解析server.xml的配置，告诉Digester哪个xml标签应该解析成什么类
         Digester digester = createStartDigester();
-
+        //解析server.xml
         try (ConfigurationSource.Resource resource = ConfigFileLoader.getSource().getServerXml()) {
             InputStream inputStream = resource.getInputStream();
             InputSource inputSource = new InputSource(resource.getURI().toURL().toString());
             inputSource.setByteStream(inputStream);
-            digester.push(this);
-            digester.parse(inputSource);
+            digester.push(this);// 把Catalina作为一个顶级实例
+            digester.parse(inputSource);//解析xml,会实例化各个组件，比如Server、Container、Connector等
         } catch (Exception e) {
             log.warn(sm.getString("catalina.configFail", file.getAbsolutePath()), e);
             if (file.exists() && !file.canRead()) {
@@ -577,9 +588,9 @@ public class Catalina {
         getServer().setCatalinaBase(Bootstrap.getCatalinaBaseFile());
 
         // Stream redirection
-        initStreams();
+        initStreams();//初始化System.out和err
 
-        // Start the new server
+        // Start the new server  // 调用Lifecycle的init阶段
         try {
             getServer().init();
         } catch (LifecycleException e) {
@@ -600,7 +611,7 @@ public class Catalina {
     /*
      * Load using arguments
      */
-    public void load(String args[]) {
+    public void load(String[] args) {
 
         try {
             if (arguments(args)) {

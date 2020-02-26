@@ -249,7 +249,7 @@ public final class Bootstrap {
      * @throws Exception Fatal initialization error
      */
     public void init() throws Exception {
-
+        //初始化classloader ，实例化Catalina类，并且反射调用setParentClassLoader。
         initClassLoaders();
 
         Thread.currentThread().setContextClassLoader(catalinaLoader);
@@ -266,9 +266,9 @@ public final class Bootstrap {
         if (log.isDebugEnabled())
             log.debug("Setting startup class properties");
         String methodName = "setParentClassLoader";
-        Class<?> paramTypes[] = new Class[1];
+        Class<?>[] paramTypes = new Class[1];
         paramTypes[0] = Class.forName("java.lang.ClassLoader");
-        Object paramValues[] = new Object[1];
+        Object[] paramValues = new Object[1];
         paramValues[0] = sharedLoader;
         Method method =
             startupInstance.getClass().getMethod(methodName, paramTypes);
@@ -285,8 +285,8 @@ public final class Bootstrap {
 
         // Call the load() method
         String methodName = "load";
-        Object param[];
-        Class<?> paramTypes[];
+        Object[] param;
+        Class<?>[] paramTypes;
         if (arguments==null || arguments.length==0) {
             paramTypes = null;
             param = null;
@@ -374,8 +374,8 @@ public final class Bootstrap {
      */
     public void stopServer(String[] arguments) throws Exception {
 
-        Object param[];
-        Class<?> paramTypes[];
+        Object[] param;
+        Class<?>[] paramTypes;
         if (arguments == null || arguments.length == 0) {
             paramTypes = null;
             param = null;
@@ -399,9 +399,9 @@ public final class Bootstrap {
     public void setAwait(boolean await)
         throws Exception {
 
-        Class<?> paramTypes[] = new Class[1];
+        Class<?>[] paramTypes = new Class[1];
         paramTypes[0] = Boolean.TYPE;
-        Object paramValues[] = new Object[1];
+        Object[] paramValues = new Object[1];
         paramValues[0] = Boolean.valueOf(await);
         Method method =
             catalinaDaemon.getClass().getMethod("setAwait", paramTypes);
@@ -409,8 +409,8 @@ public final class Bootstrap {
     }
 
     public boolean getAwait() throws Exception {
-        Class<?> paramTypes[] = new Class[0];
-        Object paramValues[] = new Object[0];
+        Class<?>[] paramTypes = new Class[0];
+        Object[] paramValues = new Object[0];
         Method method =
             catalinaDaemon.getClass().getMethod("getAwait", paramTypes);
         Boolean b=(Boolean)method.invoke(catalinaDaemon, paramValues);
@@ -434,14 +434,14 @@ public final class Bootstrap {
      *
      * @param args Command line arguments to be processed
      */
-    public static void main(String args[]) {
+    public static void main(String[] args) {
 
         synchronized (daemonLock) {
             if (daemon == null) {
                 // Don't set daemon until init() has completed
                 Bootstrap bootstrap = new Bootstrap();
                 try {
-                    bootstrap.init();
+                    bootstrap.init();//实例化Catalina，并设置classloader
                 } catch (Throwable t) {
                     handleThrowable(t);
                     t.printStackTrace();
@@ -470,8 +470,8 @@ public final class Bootstrap {
                 args[args.length - 1] = "stop";
                 daemon.stop();
             } else if (command.equals("start")) {
-                daemon.setAwait(true);
-                daemon.load(args);
+                daemon.setAwait(true);//反射调用Catalina的setAwait方法
+                daemon.load(args);//解析xml，实例化组件，并执行Lifecycle的init阶段
                 daemon.start();
                 if (null == daemon.getServer()) {
                     System.exit(1);

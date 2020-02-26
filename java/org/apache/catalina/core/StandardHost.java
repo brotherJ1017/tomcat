@@ -669,7 +669,7 @@ public class StandardHost extends ContainerBase implements Host {
                     return;
             }
             // Add this alias to the list
-            String newAliases[] = Arrays.copyOf(aliases, aliases.length + 1);
+            String[] newAliases = Arrays.copyOf(aliases, aliases.length + 1);
             newAliases[aliases.length] = alias;
             aliases = newAliases;
         }
@@ -789,7 +789,7 @@ public class StandardHost extends ContainerBase implements Host {
 
             // Remove the specified alias
             int j = 0;
-            String results[] = new String[aliases.length - 1];
+            String[] results = new String[aliases.length - 1];
             for (int i = 0; i < aliases.length; i++) {
                 if (i != n)
                     results[j++] = aliases[i];
@@ -814,11 +814,11 @@ public class StandardHost extends ContainerBase implements Host {
     @Override
     protected synchronized void startInternal() throws LifecycleException {
 
-        // Set error report valve
+        // Set error report valve  // errorValve默认使用org.apache.catalina.valves.ErrorReportValve
         String errorValve = getErrorReportValveClass();
         if ((errorValve != null) && (!errorValve.equals(""))) {
             try {
-                boolean found = false;
+                boolean found = false;// 如果所有的valve中已经存在这个实例，则不进行处理，否则添加到  Pipeline 中
                 Valve[] valves = getPipeline().getValves();
                 for (Valve valve : valves) {
                     if (errorValve.equals(valve.getClass().getName())) {
@@ -827,6 +827,8 @@ public class StandardHost extends ContainerBase implements Host {
                     }
                 }
                 if(!found) {
+                    // 如果未找到则添加到 Pipeline 中，注意是添加到 basic valve 的前面
+                    // 默认情况下，first valve 是 AccessLogValve，basic 是 StandardHostValve
                     Valve valve =
                         (Valve) Class.forName(errorValve).getConstructor().newInstance();
                     getPipeline().addValve(valve);

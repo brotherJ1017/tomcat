@@ -244,12 +244,12 @@ public class Http11Processor extends AbstractProcessor {
         encodingName = encodingName.trim().toLowerCase(Locale.ENGLISH);
 
         if (encodingName.equals("identity")) {
-            // Skip
-        } else if (encodingName.equals("chunked")) {
+            // Skip // Skip 如果encoding 是identity 则忽略
+        } else if (encodingName.equals("chunked")) {//如果是chunked，则指定inputFilter为ChunkedInputFilter，通过索引指定,inputFilter数组中依次为identity,chunked,buffer,void //通过addActiveFilter来设置activeFilter
             inputBuffer.addActiveFilter
                 (inputFilters[Constants.CHUNKED_FILTER]);
-            contentDelimitation = true;
-        } else {
+            contentDelimitation = true;//并设置contentDelimitation 为true，说明已经确定，后面如果出现content-length时，会忽略。
+        } else {//如果不是identity，chunked，则根据encoding 匹配到具体的inputFilter
             for (int i = pluggableFilterIndex; i < inputFilters.length; i++) {
                 if (inputFilters[i].getEncodingName().toString().equals(encodingName)) {
                     inputBuffer.addActiveFilter(inputFilters[i]);
@@ -308,7 +308,7 @@ public class Http11Processor extends AbstractProcessor {
                     keptAlive = true;
                     // Set this every time in case limit has been changed via JMX
                     request.getMimeHeaders().setLimit(protocol.getMaxHeaderCount());
-                    if (!inputBuffer.parseHeaders()) {
+                    if (!inputBuffer.parseHeaders()) {//todo 3
                         // We've read part of the request, don't recycle it
                         // instead associate it with the socket
                         openSocket = true;
@@ -380,7 +380,7 @@ public class Http11Processor extends AbstractProcessor {
             if (getErrorState().isIoAllowed()) {
                 // Setting up filters, and parse some request headers
                 rp.setStage(org.apache.coyote.Constants.STAGE_PREPARE);
-                try {
+                try { //指定request body的读取filter,并没有真正读取
                     prepareRequest();
                 } catch (Throwable t) {
                     ExceptionUtils.handleThrowable(t);
@@ -565,7 +565,7 @@ public class Http11Processor extends AbstractProcessor {
 
         if (protocol.isSSLEnabled()) {
             request.scheme().setString("https");
-        }
+        }//只有http 1.1 才支持keepAlive，否则都是短连接，不能重用。
         MessageBytes protocolMB = request.protocol();
         if (protocolMB.equals(Constants.HTTP_11)) {
             protocolMB.setString(Constants.HTTP_11);
@@ -765,7 +765,7 @@ public class Http11Processor extends AbstractProcessor {
                 break;
             }
         }
-
+        //根据transfer-encoding 和 content-length 这两个header来判断body的解析
         // Input filter setup
         InputFilter[] inputFilters = inputBuffer.getFilters();
 
@@ -775,12 +775,12 @@ public class Http11Processor extends AbstractProcessor {
             if (transferEncodingValueMB != null) {
                 String transferEncodingValue = transferEncodingValueMB.toString();
                 // Parse the comma separated list. "identity" codings are ignored
-                int startPos = 0;
+                int startPos = 0;//transfer-encoding 可以指定多种编码方式，类似这样的transfer-encoding:aa,bb
                 int commaPos = transferEncodingValue.indexOf(',');
                 String encodingName = null;
-                while (commaPos != -1) {
+                while (commaPos != -1) { //获取第一个encodding
                     encodingName = transferEncodingValue.substring(startPos, commaPos);
-                    addInputFilter(inputFilters, encodingName);
+                    addInputFilter(inputFilters, encodingName);//根据encoding 选择对应的inputFilter
                     startPos = commaPos + 1;
                     commaPos = transferEncodingValue.indexOf(',', startPos);
                 }
@@ -791,7 +791,7 @@ public class Http11Processor extends AbstractProcessor {
 
         // Parse content-length header
         long contentLength = request.getContentLengthLong();
-        if (contentLength >= 0) {
+        if (contentLength >= 0) {//从上面的代码可以看出，contentDelimitation为true，即代表出现transfer-encoding header，则忽略content-length
             if (contentDelimitation) {
                 // contentDelimitation being true at this point indicates that
                 // chunked encoding is being used but chunked encoding should
@@ -800,7 +800,7 @@ public class Http11Processor extends AbstractProcessor {
                 // so remove it.
                 headers.removeHeader("content-length");
                 request.setContentLength(-1);
-            } else {
+            } else {//没有出现chunked，则时普通的body，指定读取request body的filter为identityFilter解析
                 inputBuffer.addActiveFilter(inputFilters[Constants.IDENTITY_FILTER]);
                 contentDelimitation = true;
             }

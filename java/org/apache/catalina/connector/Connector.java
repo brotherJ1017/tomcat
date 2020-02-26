@@ -945,7 +945,7 @@ public class Connector extends LifecycleMBeanBase  {
                     sm.getString("coyoteConnector.protocolHandlerInstantiationFailed"));
         }
 
-        // Initialize adapter
+        // Initialize adapter// 初始化Coyote适配器，这个适配器是用于Coyote的Request、Response与HttpServlet的Request、Response适配的
         adapter = new CoyoteAdapter(this);
         protocolHandler.setAdapter(adapter);
         if (service != null) {
@@ -975,7 +975,7 @@ public class Connector extends LifecycleMBeanBase  {
                 jsseProtocolHandler.setSslImplementationName(OpenSSLImplementation.class.getName());
             }
         }
-
+        // 初始化ProtocolHandler，这个init不是Lifecycle定义的init，而是ProtocolHandler接口的init
         try {
             protocolHandler.init();
         } catch (Exception e) {

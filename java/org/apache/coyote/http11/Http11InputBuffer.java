@@ -209,19 +209,19 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
      * Add an input filter to the filter library.
      */
     void addActiveFilter(InputFilter filter) {
-
+        //lastActiveFilter 默认是-1，即第一个activeFilter时，指定filter的buffer
         if (lastActiveFilter == -1) {
-            filter.setBuffer(inputStreamInputBuffer);
+            filter.setBuffer(inputStreamInputBuffer);//inputStreamInputBuffer 为SocketInputBuffer,
         } else {
-            for (int i = 0; i <= lastActiveFilter; i++) {
+            for (int i = 0; i <= lastActiveFilter; i++) {//不是第一个，则需要判断是否已经添加过。如果添加过，则忽略
                 if (activeFilters[i] == filter)
                     return;
-            }
+            }//前面已经有filter，该filter的buffer 为上个filter的buffer
             filter.setBuffer(activeFilters[lastActiveFilter]);
         }
-
+        //添加到activeFilters
         activeFilters[++lastActiveFilter] = filter;
-
+        //如果是普通的post请求，对应的filter 设置content-length
         filter.setRequest(request);
     }
 

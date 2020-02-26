@@ -772,28 +772,28 @@ public class ContextConfig implements LifecycleListener {
                     Boolean.valueOf(context.getXmlValidation()),
                     Boolean.valueOf(context.getXmlNamespaceAware())));
         }
-
+        //解析web.xml
         webConfig();
 
         context.addServletContainerInitializer(new JasperInitializer(), null);
 
         if (!context.getIgnoreAnnotations()) {
-            applicationAnnotationsConfig();
+            applicationAnnotationsConfig();//处理javax.annotation.Resource注解
         }
         if (ok) {
-            validateSecurityRoles();
+            validateSecurityRoles();//安全相关
         }
 
         // Configure an authenticator if we need one
         if (ok) {
-            authenticatorConfig();
+            authenticatorConfig();//用户config
         }
 
         // Dump the contents of this pipeline if requested
         if (log.isDebugEnabled()) {
             log.debug("Pipeline Configuration:");
             Pipeline pipeline = context.getPipeline();
-            Valve valves[] = null;
+            Valve[] valves = null;
             if (pipeline != null) {
                 valves = pipeline.getValves();
             }
@@ -1029,9 +1029,9 @@ public class ContextConfig implements LifecycleListener {
     protected void validateSecurityRoles() {
 
         // Check role names used in <security-constraint> elements
-        SecurityConstraint constraints[] = context.findConstraints();
+        SecurityConstraint[] constraints = context.findConstraints();
         for (int i = 0; i < constraints.length; i++) {
-            String roles[] = constraints[i].findAuthRoles();
+            String[] roles = constraints[i].findAuthRoles();
             for (int j = 0; j < roles.length; j++) {
                 if (!"*".equals(roles[j]) &&
                     !context.findSecurityRole(roles[j])) {
@@ -1042,7 +1042,7 @@ public class ContextConfig implements LifecycleListener {
         }
 
         // Check role names used in <servlet> elements
-        Container wrappers[] = context.findChildren();
+        Container[] wrappers = context.findChildren();
         for (int i = 0; i < wrappers.length; i++) {
             Wrapper wrapper = (Wrapper) wrappers[i];
             String runAs = wrapper.getRunAs();
@@ -1050,7 +1050,7 @@ public class ContextConfig implements LifecycleListener {
                 log.warn(sm.getString("contextConfig.role.runas", runAs));
                 context.addSecurityRole(runAs);
             }
-            String names[] = wrapper.findSecurityReferences();
+            String[] names = wrapper.findSecurityReferences();
             for (int j = 0; j < names.length; j++) {
                 String link = wrapper.findSecurityReference(names[j]);
                 if ((link != null) && !context.findSecurityRole(link)) {
@@ -1106,13 +1106,13 @@ public class ContextConfig implements LifecycleListener {
          */
         WebXmlParser webXmlParser = new WebXmlParser(context.getXmlNamespaceAware(),
                 context.getXmlValidation(), context.getXmlBlockExternal());
-
+        //解析/home/web.xml
         Set<WebXml> defaults = new HashSet<>();
         defaults.add(getDefaultWebXmlFragment(webXmlParser));
-
+        //解析项目里的xml
         Set<WebXml> tomcatWebXml = new HashSet<>();
         tomcatWebXml.add(getTomcatWebXmlFragment(webXmlParser));
-
+        // 创建 WebXml实例，并解析 web.xml 文件
         WebXml webXml = createWebXml();
 
         // Parse context level web.xml
@@ -1124,23 +1124,25 @@ public class ContextConfig implements LifecycleListener {
         ServletContext sContext = context.getServletContext();
 
         // Ordering is important here
-
+        // 解析项目jar包里的web-fragment.xml,tomcat提供的jar包会忽略次xml文件
         // Step 1. Identify all the JARs packaged with the application and those
         // provided by the container. If any of the application JARs have a
         // web-fragment.xml it will be parsed at this point. web-fragment.xml
-        // files are ignored for container provided JARs.
+        // files are ignored for container provided JARs. 1.首先寻找带有web-fragment.xml的jar包
         Map<String,WebXml> fragments = processJarsForWebFragments(webXml, webXmlParser);
 
-        // Step 2. Order the fragments.
+        // Step 2. Order the fragments. 排序
         Set<WebXml> orderedFragments = null;
         orderedFragments =
                 WebXml.orderWebFragments(webXml, fragments, sContext);
 
         // Step 3. Look for ServletContainerInitializer implementations
+        //处理 javax.servlet.ServletContainerInitializer实现类
         if (ok) {
             processServletContainerInitializers();
         }
 
+        //如果没有web.xml配置，则tomcat 会先扫描 WEB-INF/classes 目录下面的 class 文件，然后扫描 WEB-INF/lib 目录下面的 jar 包，解析字节码读取 servlet 相关的注解配置类,
         if  (!webXml.isMetadataComplete() || typeInitializerMap.size() > 0) {
             // Steps 4 & 5.
             processClasses(webXml, orderedFragments);
@@ -1166,7 +1168,7 @@ public class ContextConfig implements LifecycleListener {
             if (ok) {
                 convertJsps(webXml);
             }
-
+            //将解析出的filter、session、session、cookie加载到context
             // Step 9. Apply merged web.xml to Context
             if (ok) {
                 configureContext(webXml);
@@ -1192,9 +1194,7 @@ public class ContextConfig implements LifecycleListener {
                 resourceJars.add(fragment);
             }
             for (WebXml fragment : fragments.values()) {
-                if (!resourceJars.contains(fragment)) {
-                    resourceJars.add(fragment);
-                }
+                resourceJars.add(fragment);
             }
             processResourceJARs(resourceJars);
             // See also StandardContext.resourcesStart() for
@@ -1282,15 +1282,18 @@ public class ContextConfig implements LifecycleListener {
         for (ErrorPage errorPage : webxml.getErrorPages().values()) {
             context.addErrorPage(errorPage);
         }
+        // 设置 Filter
         for (FilterDef filter : webxml.getFilters().values()) {
             if (filter.getAsyncSupported() == null) {
                 filter.setAsyncSupported("false");
             }
             context.addFilterDef(filter);
         }
+        // 设置 FilterMapping，即 Filter 的 URL 映射
         for (FilterMap filterMap : webxml.getFilterMappings()) {
             context.addFilterMap(filterMap);
         }
+
         context.setJspConfigDescriptor(webxml.getJspConfigDescriptor());
         for (String listener : webxml.getListeners()) {
             context.addApplicationListener(listener);
@@ -1341,6 +1344,8 @@ public class ContextConfig implements LifecycleListener {
         for (ContextService service : webxml.getServiceRefs().values()) {
             context.getNamingResources().addService(service);
         }
+
+        // 往 Context 中添加子容器 Wrapper，即 Servlet
         for (ServletDef servlet : webxml.getServlets().values()) {
             Wrapper wrapper = context.createWrapper();
             // Description is ignored
@@ -2116,7 +2121,7 @@ public class ContextConfig implements LifecycleListener {
     protected void processAnnotationsStream(InputStream is, WebXml fragment,
             boolean handlesTypesOnly, Map<String,JavaClassCacheEntry> javaClassCache)
             throws ClassFormatException, IOException {
-
+        //对字节码文件进行解析，获取其注解，并把 WebServlet、WebFilter、WebListener 注解的类添加到 WebXml 实例中
         ClassParser parser = new ClassParser(is);
         JavaClass clazz = parser.parse();
         checkHandlesTypes(clazz, javaClassCache);
@@ -2128,7 +2133,7 @@ public class ContextConfig implements LifecycleListener {
         processClass(fragment, clazz);
     }
 
-
+    //解析servlet3.0注解
     protected void processClass(WebXml fragment, JavaClass clazz) {
         AnnotationEntry[] annotationsEntries = clazz.getAnnotationEntries();
         if (annotationsEntries != null) {

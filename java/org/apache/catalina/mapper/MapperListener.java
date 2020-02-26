@@ -104,7 +104,7 @@ public class MapperListener extends LifecycleMBeanBase
         findDefaultHost();
 
         addListeners(engine);
-
+        //todo 把wrapper放入一个map，？不知道做什么用
         Container[] conHosts = engine.findChildren();
         for (Container conHost : conHosts) {
             Host host = (Host) conHost;

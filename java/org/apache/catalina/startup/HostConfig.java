@@ -286,7 +286,7 @@ public class HostConfig implements LifecycleListener {
     @Override
     public void lifecycleEvent(LifecycleEvent event) {
 
-        // Identify the host we are associated with
+        // Identify the host we are associated with 判断事件是否由 Host 发出，并且为 HostConfig 设置属性
         try {
             host = (Host) event.getLifecycle();
             if (host instanceof StandardHost) {
@@ -420,12 +420,16 @@ public class HostConfig implements LifecycleListener {
 
         File appBase = host.getAppBaseFile();
         File configBase = host.getConfigBaseFile();
+        // 过滤出 webapp 要部署应用的目录
         String[] filteredAppPaths = filterAppPaths(appBase.list());
         // Deploy XML descriptors from configBase
+        // 部署 xml 描述文件
         deployDescriptors(configBase, configBase.list());
         // Deploy WARs
+        // 解压 war 包，但是这里还不会去启动应用
         deployWARs(appBase, filteredAppPaths);
         // Deploy expanded folders
+        // 处理已经存在的目录，前面解压的 war 包不会再行处理
         deployDirectories(appBase, filteredAppPaths);
 
     }
@@ -952,7 +956,7 @@ public class HostConfig implements LifecycleListener {
         }
 
         try {
-            // Populate redeploy resources with the WAR file
+            // Populate redeploy resources with the WAR file 使用war包重新部署资源
             deployedApp.redeployResources.put
                 (war.getAbsolutePath(), Long.valueOf(war.lastModified()));
 
@@ -1084,6 +1088,7 @@ public class HostConfig implements LifecycleListener {
         boolean deployThisXML = isDeployThisXML(dir, cn);
 
         try {
+            // 实例化 StandardContext
             if (deployThisXML && xml.exists()) {
                 synchronized (digesterLock) {
                     try {
@@ -1121,7 +1126,7 @@ public class HostConfig implements LifecycleListener {
             } else {
                 context = (Context) Class.forName(contextClass).getConstructor().newInstance();
             }
-
+            // 实例化 ContextConfig，作为 LifecycleListener 添加到 Context 容器中，这和 StandardHost 的套路一样，都是使用 XXXConfig
             Class<?> clazz = Class.forName(host.getConfigClass());
             LifecycleListener listener = (LifecycleListener) clazz.getConstructor().newInstance();
             context.addLifecycleListener(listener);
@@ -1130,6 +1135,7 @@ public class HostConfig implements LifecycleListener {
             context.setPath(cn.getPath());
             context.setWebappVersion(cn.getVersion());
             context.setDocBase(cn.getBaseName());
+            // 实例化 Context 之后，为 Host 添加子容器
             host.addChild(context);
         } catch (Throwable t) {
             ExceptionUtils.handleThrowable(t);
@@ -1524,14 +1530,11 @@ public class HostConfig implements LifecycleListener {
             return false;
         }
 
-        if (canonicalLocation.equals(canonicalConfigBase) &&
-                resource.getName().endsWith(".xml")) {
-            // Resource is an xml file in the configBase so it may be deleted
-            return true;
-        }
+        // Resource is an xml file in the configBase so it may be deleted
+        return canonicalLocation.equals(canonicalConfigBase) &&
+                resource.getName().endsWith(".xml");
 
         // All other resources should not be deleted
-        return false;
     }
 
 

@@ -200,13 +200,12 @@ public class StandardContext extends ContainerBase
      */
     private boolean antiResourceLocking = false;
 
-
     /**
      * The set of application listener class names configured for this
      * application, in the order they were encountered in the resulting merged
      * web.xml file.
      */
-    private String applicationListeners[] = new String[0];
+    private String[] applicationListeners = new String[0];
 
     private final Object applicationListenersLock = new Object();
 
@@ -223,14 +222,13 @@ public class StandardContext extends ContainerBase
      */
     private List<Object> applicationEventListenersList = new CopyOnWriteArrayList<>();
 
-
     /**
      * The set of instantiated application lifecycle listener objects. Note that
      * SCIs and other code may use the pluggability APIs to add listener
      * instances directly to this list before the application starts.
      */
-    private Object applicationLifecycleListenersObjects[] =
-        new Object[0];
+    private Object[] applicationLifecycleListenersObjects =
+            new Object[0];
 
 
     /**
@@ -239,12 +237,11 @@ public class StandardContext extends ContainerBase
     private Map<ServletContainerInitializer,Set<Class<?>>> initializers =
         new LinkedHashMap<>();
 
-
     /**
      * The set of application parameters defined for this application.
      */
-    private ApplicationParameter applicationParameters[] =
-        new ApplicationParameter[0];
+    private ApplicationParameter[] applicationParameters =
+            new ApplicationParameter[0];
 
     private final Object applicationParametersLock = new Object();
 
@@ -278,11 +275,10 @@ public class StandardContext extends ContainerBase
      */
     private boolean configured = false;
 
-
     /**
      * The security constraints for this web application.
      */
-    private volatile SecurityConstraint constraints[] =
+    private volatile SecurityConstraint[] constraints =
             new SecurityConstraint[0];
 
     private final Object constraintsLock = new Object();
@@ -513,11 +509,10 @@ public class StandardContext extends ContainerBase
      */
     private Map<String, String> roleMappings = new HashMap<>();
 
-
     /**
      * The security roles for this application, keyed by role name.
      */
-    private String securityRoles[] = new String[0];
+    private String[] securityRoles = new String[0];
 
     private final Object securityRolesLock = new Object();
 
@@ -554,28 +549,25 @@ public class StandardContext extends ContainerBase
      */
     private long unloadDelay = 2000;
 
-
     /**
      * The watched resources for this application.
      */
-    private String watchedResources[] = new String[0];
+    private String[] watchedResources = new String[0];
 
     private final Object watchedResourcesLock = new Object();
-
 
     /**
      * The welcome files for this application.
      */
-    private String welcomeFiles[] = new String[0];
+    private String[] welcomeFiles = new String[0];
 
     private final Object welcomeFilesLock = new Object();
-
 
     /**
      * The set of classnames of LifecycleListeners that will be added
      * to each newly created Wrapper by <code>createWrapper()</code>.
      */
-    private String wrapperLifecycles[] = new String[0];
+    private String[] wrapperLifecycles = new String[0];
 
     private final Object wrapperLifecyclesLock = new Object();
 
@@ -583,7 +575,7 @@ public class StandardContext extends ContainerBase
      * The set of classnames of ContainerListeners that will be added
      * to each newly created Wrapper by <code>createWrapper()</code>.
      */
-    private String wrapperListeners[] = new String[0];
+    private String[] wrapperListeners = new String[0];
 
     private final Object wrapperListenersLock = new Object();
 
@@ -890,11 +882,7 @@ public class StandardContext extends ContainerBase
          * differentiate between a Response using this default encoding and one
          * that has been explicitly configured.
          */
-        if (responseEncoding == null) {
-            this.responseEncoding = null;
-        } else {
-            this.responseEncoding = new String(responseEncoding);
-        }
+        this.responseEncoding = responseEncoding;
     }
 
 
@@ -1319,7 +1307,7 @@ public class StandardContext extends ContainerBase
      * the union of both.
      */
     @Override
-    public void setApplicationEventListeners(Object listeners[]) {
+    public void setApplicationEventListeners(Object[] listeners) {
         applicationEventListenersList.clear();
         if (listeners != null && listeners.length > 0) {
             applicationEventListenersList.addAll(Arrays.asList(listeners));
@@ -1352,7 +1340,7 @@ public class StandardContext extends ContainerBase
      * @param listeners The set of instantiated listener objects.
      */
     @Override
-    public void setApplicationLifecycleListeners(Object listeners[]) {
+    public void setApplicationLifecycleListeners(Object[] listeners) {
         applicationLifecycleListenersObjects = listeners;
     }
 
@@ -2783,7 +2771,7 @@ public class StandardContext extends ContainerBase
     public void addApplicationListener(String listener) {
 
         synchronized (applicationListenersLock) {
-            String results[] = new String[applicationListeners.length + 1];
+            String[] results = new String[applicationListeners.length + 1];
             for (int i = 0; i < applicationListeners.length; i++) {
                 if (listener.equals(applicationListeners[i])) {
                     log.info(sm.getString("standardContext.duplicateListener",listener));
@@ -2814,7 +2802,7 @@ public class StandardContext extends ContainerBase
                 if (newName.equals(p.getName()) && !p.getOverride())
                     return;
             }
-            ApplicationParameter results[] = Arrays.copyOf(
+            ApplicationParameter[] results = Arrays.copyOf(
                     applicationParameters, applicationParameters.length + 1);
             results[applicationParameters.length] = parameter;
             applicationParameters = results;
@@ -2878,9 +2866,9 @@ public class StandardContext extends ContainerBase
     public void addConstraint(SecurityConstraint constraint) {
 
         // Validate the proposed constraint
-        SecurityCollection collections[] = constraint.findCollections();
+        SecurityCollection[] collections = constraint.findCollections();
         for (int i = 0; i < collections.length; i++) {
-            String patterns[] = collections[i].findPatterns();
+            String[] patterns = collections[i].findPatterns();
             for (int j = 0; j < patterns.length; j++) {
                 patterns[j] = adjustURLPattern(patterns[j]);
                 if (!validateURLPattern(patterns[j]))
@@ -3415,7 +3403,7 @@ public class StandardContext extends ContainerBase
     @Override
     public FilterDef[] findFilterDefs() {
         synchronized (filterDefs) {
-            FilterDef results[] = new FilterDef[filterDefs.size()];
+            FilterDef[] results = new FilterDef[filterDefs.size()];
             return filterDefs.values().toArray(results);
         }
     }
@@ -3450,8 +3438,8 @@ public class StandardContext extends ContainerBase
      */
     public MessageDestination[] findMessageDestinations() {
         synchronized (messageDestinations) {
-            MessageDestination results[] =
-                new MessageDestination[messageDestinations.size()];
+            MessageDestination[] results =
+                    new MessageDestination[messageDestinations.size()];
             return messageDestinations.values().toArray(results);
         }
     }
@@ -3505,7 +3493,7 @@ public class StandardContext extends ContainerBase
     @Override
     public String[] findMimeMappings() {
         synchronized (mimeMappings) {
-            String results[] = new String[mimeMappings.size()];
+            String[] results = new String[mimeMappings.size()];
             return mimeMappings.keySet().toArray(results);
         }
     }
@@ -3610,7 +3598,7 @@ public class StandardContext extends ContainerBase
     @Override
     public String[] findServletMappings() {
         synchronized (servletMappingsLock) {
-            String results[] = new String[servletMappings.size()];
+            String[] results = new String[servletMappings.size()];
             return servletMappings.keySet().toArray(results);
         }
     }
@@ -3633,14 +3621,14 @@ public class StandardContext extends ContainerBase
     public int[] findStatusPages() {
         ErrorPage[] errorPages = findErrorPages();
         int size = errorPages.length;
-        int temp[] = new int[size];
+        int[] temp = new int[size];
         int count = 0;
         for (int i = 0; i < size; i++) {
             if (errorPages[i].getExceptionType() == null) {
                 temp[count++] = errorPages[i].getErrorCode();
             }
         }
-        int result[] = new int[count];
+        int[] result = new int[count];
         System.arraycopy(temp, 0, result, 0, count);
         return result;
     }
@@ -3791,7 +3779,7 @@ public class StandardContext extends ContainerBase
 
             // Remove the specified listener
             int j = 0;
-            String results[] = new String[applicationListeners.length - 1];
+            String[] results = new String[applicationListeners.length - 1];
             for (int i = 0; i < applicationListeners.length; i++) {
                 if (i != n)
                     results[j++] = applicationListeners[i];
@@ -3831,8 +3819,8 @@ public class StandardContext extends ContainerBase
 
             // Remove the specified parameter
             int j = 0;
-            ApplicationParameter results[] =
-                new ApplicationParameter[applicationParameters.length - 1];
+            ApplicationParameter[] results =
+                    new ApplicationParameter[applicationParameters.length - 1];
             for (int i = 0; i < applicationParameters.length; i++) {
                 if (i != n)
                     results[j++] = applicationParameters[i];
@@ -3892,8 +3880,8 @@ public class StandardContext extends ContainerBase
 
             // Remove the specified constraint
             int j = 0;
-            SecurityConstraint results[] =
-                new SecurityConstraint[constraints.length - 1];
+            SecurityConstraint[] results =
+                    new SecurityConstraint[constraints.length - 1];
             for (int i = 0; i < constraints.length; i++) {
                 if (i != n)
                     results[j++] = constraints[i];
@@ -4049,7 +4037,7 @@ public class StandardContext extends ContainerBase
 
             // Remove the specified security role
             int j = 0;
-            String results[] = new String[securityRoles.length - 1];
+            String[] results = new String[securityRoles.length - 1];
             for (int i = 0; i < securityRoles.length; i++) {
                 if (i != n)
                     results[j++] = securityRoles[i];
@@ -4109,7 +4097,7 @@ public class StandardContext extends ContainerBase
 
             // Remove the specified watched resource
             int j = 0;
-            String results[] = new String[watchedResources.length - 1];
+            String[] results = new String[watchedResources.length - 1];
             for (int i = 0; i < watchedResources.length; i++) {
                 if (i != n)
                     results[j++] = watchedResources[i];
@@ -4147,7 +4135,7 @@ public class StandardContext extends ContainerBase
 
             // Remove the specified welcome file
             int j = 0;
-            String results[] = new String[welcomeFiles.length - 1];
+            String[] results = new String[welcomeFiles.length - 1];
             for (int i = 0; i < welcomeFiles.length; i++) {
                 if (i != n)
                     results[j++] = welcomeFiles[i];
@@ -4188,7 +4176,7 @@ public class StandardContext extends ContainerBase
 
             // Remove the specified lifecycle listener
             int j = 0;
-            String results[] = new String[wrapperLifecycles.length - 1];
+            String[] results = new String[wrapperLifecycles.length - 1];
             for (int i = 0; i < wrapperLifecycles.length; i++) {
                 if (i != n)
                     results[j++] = wrapperLifecycles[i];
@@ -4228,7 +4216,7 @@ public class StandardContext extends ContainerBase
 
             // Remove the specified listener
             int j = 0;
-            String results[] = new String[wrapperListeners.length - 1];
+            String[] results = new String[wrapperListeners.length - 1];
             for (int i = 0; i < wrapperListeners.length; i++) {
                 if (i != n)
                     results[j++] = wrapperListeners[i];
@@ -4447,7 +4435,7 @@ public class StandardContext extends ContainerBase
          */
         public void add(FilterMap filterMap) {
             synchronized (lock) {
-                FilterMap results[] = Arrays.copyOf(array, array.length + 1);
+                FilterMap[] results = Arrays.copyOf(array, array.length + 1);
                 results[array.length] = filterMap;
                 array = results;
             }
@@ -4462,7 +4450,7 @@ public class StandardContext extends ContainerBase
          */
         public void addBefore(FilterMap filterMap) {
             synchronized (lock) {
-                FilterMap results[] = new FilterMap[array.length + 1];
+                FilterMap[] results = new FilterMap[array.length + 1];
                 System.arraycopy(array, 0, results, 0, insertPoint);
                 System.arraycopy(array, insertPoint, results, insertPoint + 1,
                         array.length - insertPoint);
@@ -4491,7 +4479,7 @@ public class StandardContext extends ContainerBase
                     return;
 
                 // Remove the specified filter mapping
-                FilterMap results[] = new FilterMap[array.length - 1];
+                FilterMap[] results = new FilterMap[array.length - 1];
                 System.arraycopy(array, 0, results, 0, n);
                 System.arraycopy(array, n + 1, results, n, (array.length - 1)
                         - n);
@@ -4592,8 +4580,8 @@ public class StandardContext extends ContainerBase
             log.debug("Configuring application event listeners");
 
         // Instantiate the required listeners
-        String listeners[] = findApplicationListeners();
-        Object results[] = new Object[listeners.length];
+        String[] listeners = findApplicationListeners();
+        Object[] results = new Object[listeners.length];
         boolean ok = true;
         for (int i = 0; i < results.length; i++) {
             if (getLogger().isDebugEnabled())
@@ -4658,7 +4646,7 @@ public class StandardContext extends ContainerBase
         getServletContext();
         context.setNewServletContextListenerAllowed(false);
 
-        Object instances[] = getApplicationLifecycleListeners();
+        Object[] instances = getApplicationLifecycleListeners();
         if (instances == null || instances.length == 0) {
             return ok;
         }
@@ -4707,7 +4695,7 @@ public class StandardContext extends ContainerBase
             log.debug("Sending application stop events");
 
         boolean ok = true;
-        Object listeners[] = getApplicationLifecycleListeners();
+        Object[] listeners = getApplicationLifecycleListeners();
         if (listeners != null && listeners.length > 0) {
             ServletContextEvent event = new ServletContextEvent(getServletContext());
             ServletContextEvent tldEvent = null;
@@ -4843,7 +4831,7 @@ public class StandardContext extends ContainerBase
      *  servlets (including those not declared load on startup)
      * @return <code>true</code> if load on startup was considered successful
      */
-    public boolean loadOnStartup(Container children[]) {
+    public boolean loadOnStartup(Container[] children) {
 
         // Collect "load on startup" servlets that need to be initialized
         TreeMap<Integer, ArrayList<Wrapper>> map = new TreeMap<>();
@@ -4896,6 +4884,7 @@ public class StandardContext extends ContainerBase
 
         if(log.isDebugEnabled())
             log.debug("Starting " + getBaseName());
+
 
         // Send j2ee.state.starting notification
         if (this.getObjectName() != null) {
@@ -4968,7 +4957,7 @@ public class StandardContext extends ContainerBase
             useNaming = false;
         }
 
-        if (ok && isUseNaming()) {
+        if (ok && isUseNaming()) { //将NamingContextListener 添加为listener
             if (getNamingContextListener() == null) {
                 NamingContextListener ncl = new NamingContextListener();
                 ncl.setName(getNamingContextName());
@@ -4988,7 +4977,7 @@ public class StandardContext extends ContainerBase
 
         try {
             if (ok) {
-                // Start our subordinate components, if any
+                // Start our subordinate components, if any //create loader并调用start
                 Loader loader = getLoader();
                 if (loader instanceof Lifecycle) {
                     ((Lifecycle) loader).start();
@@ -5045,6 +5034,7 @@ public class StandardContext extends ContainerBase
                 }
 
                 // Notify our interested LifecycleListeners
+                //调用ContextConfig 从web.xml 或者 Servlet3.0 的注解配置，读取 Servlet 相关的配置信息，比如 Filter、Servlet、Listener 等
                 fireLifecycleEvent(Lifecycle.CONFIGURE_START_EVENT, null);
 
                 // Start our child containers, if not already started
@@ -5132,7 +5122,7 @@ public class StandardContext extends ContainerBase
             // Set up the context init params
             mergeParameters();
 
-            // Call ServletContainerInitializers
+            // Call ServletContainerInitializers 执行ServletContainerInitializer的SPI实现类
             for (Map.Entry<ServletContainerInitializer, Set<Class<?>>> entry :
                 initializers.entrySet()) {
                 try {
@@ -5172,13 +5162,15 @@ public class StandardContext extends ContainerBase
             }
 
             // Configure and call application filters
+            //  初始化filter
             if (ok) {
                 if (!filterStart()) {
                     log.error(sm.getString("standardContext.filterFail"));
                     ok = false;
                 }
             }
-
+            // StandardWrapper 实例化并且启动 Servlet，由于 Servlet 存在 loadOnStartup 属性
+            // 因此使用了 TreeMap，根据 loadOnStartup 值 对 Wrapper 容器进行排序，然后依次启动 Servlet
             // Load and initialize all "load on startup" servlets
             if (ok) {
                 if (!loadOnStartup(findChildren())){
@@ -5301,12 +5293,12 @@ public class StandardContext extends ContainerBase
     private void mergeParameters() {
         Map<String,String> mergedParams = new HashMap<>();
 
-        String names[] = findParameters();
+        String[] names = findParameters();
         for (int i = 0; i < names.length; i++) {
             mergedParams.put(names[i], findParameter(names[i]));
         }
 
-        ApplicationParameter params[] = findApplicationParameters();
+        ApplicationParameter[] params = findApplicationParameters();
         for (int i = 0; i < params.length; i++) {
             if (params[i].getOverride()) {
                 if (mergedParams.get(params[i].getName()) == null) {
@@ -5876,7 +5868,7 @@ public class StandardContext extends ContainerBase
     @Override
     public boolean fireRequestInitEvent(ServletRequest request) {
 
-        Object instances[] = getApplicationEventListeners();
+        Object[] instances = getApplicationEventListeners();
 
         if ((instances != null) && (instances.length > 0)) {
 
@@ -5909,7 +5901,7 @@ public class StandardContext extends ContainerBase
 
     @Override
     public boolean fireRequestDestroyEvent(ServletRequest request) {
-        Object instances[] = getApplicationEventListeners();
+        Object[] instances = getApplicationEventListeners();
 
         if ((instances != null) && (instances.length > 0)) {
 

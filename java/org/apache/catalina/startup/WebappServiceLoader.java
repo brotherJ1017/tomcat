@@ -95,7 +95,7 @@ public class WebappServiceLoader<T> {
         LinkedHashSet<String> containerServicesFound = new LinkedHashSet<>();
 
         ClassLoader loader = servletContext.getClassLoader();
-
+        //如果ServletContext具有ORDERED_LIBS，则使用它来指定WEB-INF / lib中应用于加载服务的JAR集
         // if the ServletContext has ORDERED_LIBS, then use that to specify the
         // set of JARs from WEB-INF/lib that should be used for loading services
         @SuppressWarnings("unchecked")
@@ -147,7 +147,7 @@ public class WebappServiceLoader<T> {
                 }
             }
         }
-
+        //在容器服务之后添加应用程序服务，以确保首先加载容器服务
         // Add the application services after the container services to ensure
         // that the container services are loaded first
         containerServicesFound.addAll(applicationServicesFound);

@@ -68,7 +68,7 @@ public class SetPropertiesRule extends Rule {
                 digester.log.debug("[SetPropertiesRule]{" + digester.match +
                         "} Setting property '" + name + "' to '" +
                         value + "'");
-            }
+            }//匹配当前栈顶元素与server.xml元素，并将属性值设置到栈顶对象中
             if (!digester.isFakeAttribute(top, name)
                     && !IntrospectionUtils.setProperty(top, name, value)
                     && digester.getRulesValidation()) {
