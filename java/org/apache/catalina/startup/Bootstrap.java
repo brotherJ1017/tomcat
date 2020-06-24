@@ -246,10 +246,11 @@ public final class Bootstrap {
 
     /**
      * Initialize daemon.
+     * 初始化classloader ，实例化Catalina类，并且反射调用setParentClassLoader将sharedLoader设置进去。
      * @throws Exception Fatal initialization error
      */
     public void init() throws Exception {
-        //初始化classloader ，实例化Catalina类，并且反射调用setParentClassLoader。
+        //初始化commonLoader catalinaLoader sharedLoader
         initClassLoaders();
 
         Thread.currentThread().setContextClassLoader(catalinaLoader);
@@ -470,7 +471,7 @@ public final class Bootstrap {
                 args[args.length - 1] = "stop";
                 daemon.stop();
             } else if (command.equals("start")) {
-                daemon.setAwait(true);//反射调用Catalina的setAwait方法
+                daemon.setAwait(true);//反射调用Catalina的setAwait方法 让tomcat在关闭端口阻塞监听关闭命令
                 daemon.load(args);//解析xml，实例化组件，并执行Lifecycle的init阶段
                 daemon.start();
                 if (null == daemon.getServer()) {

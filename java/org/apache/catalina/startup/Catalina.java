@@ -582,7 +582,7 @@ public class Catalina {
             }
             return;
         }
-
+        // 给Server设置catalina信息
         getServer().setCatalina(this);
         getServer().setCatalinaHome(Bootstrap.getCatalinaHomeFile());
         getServer().setCatalinaBase(Bootstrap.getCatalinaBaseFile());

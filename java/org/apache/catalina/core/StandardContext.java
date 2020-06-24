@@ -220,7 +220,7 @@ public class StandardContext extends ContainerBase
      * SCIs and other code may use the pluggability APIs to add listener
      * instances directly to this list before the application starts.
      */
-    private List<Object> applicationEventListenersList = new CopyOnWriteArrayList<>();
+    private final List<Object> applicationEventListenersList = new CopyOnWriteArrayList<>();
 
     /**
      * The set of instantiated application lifecycle listener objects. Note that
@@ -234,7 +234,7 @@ public class StandardContext extends ContainerBase
     /**
      * The ordered set of ServletContainerInitializers for this web application.
      */
-    private Map<ServletContainerInitializer,Set<Class<?>>> initializers =
+    private final Map<ServletContainerInitializer,Set<Class<?>>> initializers =
         new LinkedHashMap<>();
 
     /**
@@ -368,14 +368,14 @@ public class StandardContext extends ContainerBase
      * The set of filter configurations (and associated filter instances) we
      * have initialized, keyed by filter name.
      */
-    private Map<String, ApplicationFilterConfig> filterConfigs = new HashMap<>();
+    private final Map<String, ApplicationFilterConfig> filterConfigs = new HashMap<>();
 
 
     /**
      * The set of filter definitions for this application, keyed by
      * filter name.
      */
-    private Map<String, FilterDef> filterDefs = new HashMap<>();
+    private final Map<String, FilterDef> filterDefs = new HashMap<>();
 
 
     /**
@@ -426,14 +426,14 @@ public class StandardContext extends ContainerBase
     /**
      * The message destinations for this web application.
      */
-    private HashMap<String, MessageDestination> messageDestinations =
+    private final HashMap<String, MessageDestination> messageDestinations =
         new HashMap<>();
 
 
     /**
      * The MIME mappings for this web application, keyed by extension.
      */
-    private Map<String, String> mimeMappings = new HashMap<>();
+    private final Map<String, String> mimeMappings = new HashMap<>();
 
 
     /**
@@ -507,7 +507,7 @@ public class StandardContext extends ContainerBase
      * The security role mappings for this application, keyed by role
      * name (as used within the application).
      */
-    private Map<String, String> roleMappings = new HashMap<>();
+    private final Map<String, String> roleMappings = new HashMap<>();
 
     /**
      * The security roles for this application, keyed by role name.
@@ -521,7 +521,7 @@ public class StandardContext extends ContainerBase
      * The servlet mappings for this web application, keyed by
      * matching pattern.
      */
-    private Map<String, String> servletMappings = new HashMap<>();
+    private final Map<String, String> servletMappings = new HashMap<>();
 
     private final Object servletMappingsLock = new Object();
 
@@ -534,7 +534,7 @@ public class StandardContext extends ContainerBase
     /**
      * The notification sequence number.
      */
-    private AtomicLong sequenceNumber = new AtomicLong(0);
+    private final AtomicLong sequenceNumber = new AtomicLong(0);
 
 
     /**
@@ -757,7 +757,7 @@ public class StandardContext extends ContainerBase
 
     private JspConfigDescriptor jspConfigDescriptor = null;
 
-    private Set<String> resourceOnlyServlets = new HashSet<>();
+    private final Set<String> resourceOnlyServlets = new HashSet<>();
 
     private String webappVersion = "";
 
@@ -769,7 +769,7 @@ public class StandardContext extends ContainerBase
      * Servlets created via {@link ApplicationContext#createServlet(Class)} for
      * tracking purposes.
      */
-    private Set<Servlet> createdServlets = new HashSet<>();
+    private final Set<Servlet> createdServlets = new HashSet<>();
 
     private boolean preemptiveAuthentication = false;
 
@@ -777,8 +777,8 @@ public class StandardContext extends ContainerBase
 
     private boolean jndiExceptionOnFailedWrite = true;
 
-    private Map<String, String> postConstructMethods = new HashMap<>();
-    private Map<String, String> preDestroyMethods = new HashMap<>();
+    private final Map<String, String> postConstructMethods = new HashMap<>();
+    private final Map<String, String> preDestroyMethods = new HashMap<>();
 
     private String containerSciFilter;
 
@@ -4905,7 +4905,7 @@ public class StandardContext extends ContainerBase
         // Post work directory
         postWorkDirectory();
 
-        // Add missing components as necessary
+        // Add missing components as necessary //创建MainResourceSet，并执行resource的start事件，加载项目jar包
         if (getResources() == null) {   // (1) Required by Loader
             if (log.isDebugEnabled())
                 log.debug("Configuring default Resources");
@@ -4927,7 +4927,7 @@ public class StandardContext extends ContainerBase
             setLoader(webappLoader);
         }
 
-        // An explicit cookie processor hasn't been specified; use the default
+        // An explicit cookie processor hasn't been specified; use the default //创建默认cookie处理器
         if (cookieProcessor == null) {
             cookieProcessor = new Rfc6265CookieProcessor();
         }
@@ -4977,10 +4977,10 @@ public class StandardContext extends ContainerBase
 
         try {
             if (ok) {
-                // Start our subordinate components, if any //create loader并调用start
+                // Start our subordinate components, if any //create loader并调用start，这里为WebappLoader
                 Loader loader = getLoader();
                 if (loader instanceof Lifecycle) {
-                    ((Lifecycle) loader).start();
+                    ((Lifecycle) loader).start();//load所有class
                 }
 
                 // since the loader just started, the webapp classloader is now

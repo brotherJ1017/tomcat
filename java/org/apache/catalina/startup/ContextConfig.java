@@ -735,7 +735,7 @@ public class ContextConfig implements LifecycleListener {
         }
         context.setConfigured(false);
         ok = true;
-
+        //处理默认配置文件 war/context.xml
         contextConfig(contextDigester);
     }
 
@@ -1123,6 +1123,7 @@ public class ContextConfig implements LifecycleListener {
 
         ServletContext sContext = context.getServletContext();
 
+
         // Ordering is important here
         // 解析项目jar包里的web-fragment.xml,tomcat提供的jar包会忽略次xml文件
         // Step 1. Identify all the JARs packaged with the application and those
@@ -1168,7 +1169,7 @@ public class ContextConfig implements LifecycleListener {
             if (ok) {
                 convertJsps(webXml);
             }
-            //将解析出的filter、session、session、cookie加载到context
+            //将解析出的filter、servlet、session、cookie加载到context
             // Step 9. Apply merged web.xml to Context
             if (ok) {
                 configureContext(webXml);

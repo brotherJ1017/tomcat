@@ -923,7 +923,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase
         // 启用Pipeline
         // Start the Valves in our pipeline (including the basic), if any
         if (pipeline instanceof Lifecycle) {
-            ((Lifecycle) pipeline).start();
+                ((Lifecycle) pipeline).start();
         }
 
         setState(LifecycleState.STARTING);
@@ -1366,7 +1366,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase
 
     private static class StartChild implements Callable<Void> {
 
-        private Container child;
+        private final Container child;
 
         public StartChild(Container child) {
             this.child = child;
@@ -1381,7 +1381,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase
 
     private static class StopChild implements Callable<Void> {
 
-        private Container child;
+        private final Container child;
 
         public StopChild(Container child) {
             this.child = child;
